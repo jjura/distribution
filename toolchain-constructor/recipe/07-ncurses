@@ -1,0 +1,45 @@
+#!/bin/bash
+
+package_name="ncurses"
+package_version="6.5"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    "$package_source/configure" \
+        AWK="gawk"
+
+    make --directory "$package_build/include"
+    make --directory "$package_build/progs" "tic"
+
+    cd "$package_source"
+
+    "$package_source/configure"                \
+        --prefix="/usr"                        \
+        --build=`$package_source/config.guess` \
+        --host="$toolchain_target"             \
+        --with-cxx-shared                      \
+        --with-manpage-format="normal"         \
+        --with-shared                          \
+        --without-ada                          \
+        --without-debug                        \
+        --without-normal                       \
+        --disable-stripping                    \
+        --mandir="/usr/share/man"              \
+        AWK="gawk"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" TIC_PATH="$package_build/progs/tic" install
+
+    ln --symbolic "libncursesw.so" "$toolchain_root/usr/lib/libncurses.so"
+
+    sed --expression "s/^#if.*XOPEN.*$/#if 1/" \
+        --in-place "$toolchain_root/usr/include/curses.h"
+}

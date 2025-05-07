@@ -1,0 +1,28 @@
+#!/bin/bash
+
+package_name="setuptools"
+package_version="75.8.1"
+package_address="https://pypi.org/packages/source/s/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    pip3 wheel "$package_source" \
+        --no-build-isolation     \
+        --no-cache-dir           \
+        --no-deps                \
+        --wheel-dir "$package_build"
+}
+
+function do_build
+{
+    return
+}
+
+function do_install
+{
+    pip3 install "setuptools"         \
+        --find-links "$package_build" \
+        --no-index                    \
+        --root="$package_root"
+}

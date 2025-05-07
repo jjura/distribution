@@ -1,0 +1,33 @@
+#!/bin/bash
+
+package_name="cmake"
+package_version="3.31.5"
+package_address="https://cmake.org/files/v3.31/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    sed "/\"lib64\"/s/64//" --in-place "$package_source/Modules/GNUInstallDirs.cmake"
+
+    "$package_source/bootstrap"                              \
+        --prefix="/usr"                                      \
+        --docdir="/share/doc/$package_name-$package_version" \
+        --mandir="/share/man"                                \
+        --no-system-cppdap                                   \
+        --no-system-curl                                     \
+        --no-system-jsoncpp                                  \
+        --no-system-libarchive                               \
+        --no-system-librhash                                 \
+        --no-system-libuv                                    \
+        --system-libs
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+package_name="findutils"
+package_version="4.10.0"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.xz"
+
+function do_configure
+{
+    "$package_source/configure"                          \
+        --prefix="/usr"                                  \
+        --build=`$package_source/build-aux/config.guess` \
+        --host="$toolchain_target"                       \
+        --localstatedir="/var/lib/locate"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+}

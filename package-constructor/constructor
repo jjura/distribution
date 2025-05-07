@@ -1,0 +1,189 @@
+#!/bin/bash
+
+function directory
+{
+    directory="$(realpath "$0" | xargs dirname)"
+}
+
+function package_recipe
+{
+    package_recipe="$directory/recipe/$package"
+
+    if [ ! -d "$package_recipe" ]
+    then
+        echo "Error: Cannot read the package recipe for: $package"
+        exit 1
+    fi
+
+    source "$package_recipe/build"
+}
+
+function package_dependency
+{
+    for package_dependency in $package_dependencies
+    do
+        if ! bash "$0" "$package_dependency"
+        then
+            echo "Error: Cannot build the package dependency: $package_dependency for: $package"
+            exit 1
+        fi
+
+        package_dependency_extract
+    done
+}
+
+function package_dependency_extract
+{
+    package_dependency_archive="$directory/package/build-archive/$package_dependency"
+
+    if ! tar                                  \
+        --extract                             \
+        --file "$package_dependency_archive"* \
+        --directory "/"                       \
+        --strip-components 1
+    then
+        echo "Error: Cannot extract the package dependency: $package_dependency archive for: $package_dependency"
+        exit 1
+    fi
+}
+
+function package_source_archive
+{
+    package_source_archive="$directory/package/source-archive/$(basename "$package_address")"
+
+    if [ ! -f "$package_source_archive" ]
+    then
+        mkdir --parents "$(dirname "$package_source_archive")"
+
+        if ! wget                              \
+            --quiet                            \
+            --no-check-certificate             \
+            --show-progress "$package_address" \
+            --output-document "$package_source_archive"
+        then
+            echo "Error: Cannot download the package source archive for: $package"
+            exit 1
+        fi
+    fi
+}
+
+function package_source
+{
+    package_source="$directory/package/source/$package_name-$package_version"
+
+    if [ ! -d "$package_source" ]
+    then
+        mkdir --parents "$package_source"
+
+        if ! tar                             \
+            --extract                        \
+            --file "$package_source_archive" \
+            --directory "$package_source"    \
+            --strip-components 1
+        then
+            echo "Error: Cannot extract the package source archive for: $package"
+            exit 1
+        fi
+    fi
+}
+
+function package_root
+{
+    package_root="$directory/package/root/$package_name-$package_version"
+
+    if [ ! -d "$package_root" ]
+    then
+        for package_directory in \
+            "usr/bin"            \
+            "usr/lib"            \
+            "usr/lib64"          \
+            "usr/sbin"
+        do
+            mkdir --parents "$package_root/$package_directory"
+
+            ln --symbolic "$package_root/$package_directory" \
+               --relative "$package_root"
+        done
+    fi
+}
+
+function package_build
+{
+    package_build="$directory/package/build/$package_name-$package_version"
+
+    if [ ! -d "$package_build" ]
+    then
+        mkdir --parents "$package_build"
+
+        cd "$package_build"
+
+        package_execute "do_configure"
+        package_execute "do_build"
+        package_execute "do_install"
+    fi
+}
+
+function package_build_archive
+{
+    package_build_archive="$directory/package/build-archive/$package_name-$package_version.tar.gz"
+
+    if [ ! -f "$package_build_archive" ]
+    then
+        mkdir --parents "$(dirname "$package_build_archive")"
+
+        if ! tar                                                \
+            --create                                            \
+            --file "$package_build_archive"                     \
+            --directory "$package_recipe" "install"             \
+            --directory "$(dirname "$package_root")"            \
+                        "$(basename "$package_root")"           \
+            --transform "s:^$(basename "$package_root"):root:"  \
+            --gzip
+        then
+            echo "Error: Cannot create the package build archive for: $package"
+            exit 1
+        fi
+    fi
+}
+
+function package_execute
+{
+    package_execute="$directory/package/execute/$package_name-$package_version"
+
+    if [ ! -d "$package_execute" ]
+    then
+        mkdir --parents "$package_execute"
+    fi
+
+    echo "Execute - $package_name-$package_version - $1"
+
+    if ! "$1"                    \
+        1> "$package_execute/$1" \
+        2> "$package_execute/$1"
+    then
+        echo "Error: Cannot execute the package recipe for: $package"
+        exit 1
+    fi
+}
+
+function main
+{
+    directory
+
+    package="$@"
+
+    if [ -z "$package" ]
+    then
+        echo "Usage: $(basename "$0") <package>"
+    else
+        package_recipe
+        package_dependency
+        package_source_archive
+        package_source
+        package_root
+        package_build
+        package_build_archive
+    fi
+}
+
+main "$@"

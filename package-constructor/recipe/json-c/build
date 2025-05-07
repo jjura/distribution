@@ -1,0 +1,24 @@
+#!/bin/bash
+
+package_name="json-c"
+package_version="0.18"
+package_address="https://s3.amazonaws.com/json-c_releases/releases/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    cmake "$package_source"            \
+        -D CMAKE_INSTALL_PREFIX="/usr" \
+        -D CMAKE_BUILD_TYPE="Release"  \
+        -D BUILD_STATIC_LIBS="OFF"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

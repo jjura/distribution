@@ -1,0 +1,27 @@
+#!/bin/bash
+
+package_name="grub"
+package_version="2.12"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    echo "depends bli part_gpt" > "$package_source/grub-core/extra_deps.lst"
+
+    "$package_source/configure" \
+        --prefix="/usr"         \
+        --disable-efiemu        \
+        --disable-werror        \
+        --sysconfdir="/etc"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

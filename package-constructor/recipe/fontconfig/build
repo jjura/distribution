@@ -1,0 +1,26 @@
+#!/bin/bash
+
+package_name="fontconfig"
+package_version="2.16.0"
+package_address="https://www.freedesktop.org/software/$package_name/release/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    "$package_source/configure"                     \
+        --prefix="/usr"                             \
+        --docdir="/usr/share/doc/fontconfig-2.16.0" \
+        --disable-docs                              \
+        --localstatedir="/var"                      \
+        --sysconfdir="/etc"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

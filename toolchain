@@ -1,0 +1,115 @@
+#!/bin/bash
+
+function directory
+{
+    directory="$(realpath "$0" | xargs dirname)"
+}
+
+function toolchain_archive
+{
+    toolchain_archive="$directory/toolchain-constructor/toolchain/archive/toolchain.tar.gz"
+
+    if [ ! -f "$toolchain_archive" ]
+    then
+        echo "Error: Cannot read the toolchain archive."
+        exit 1
+    fi
+}
+
+function toolchain_root
+{
+    toolchain_root="$directory/toolchain-root"
+
+    if [ ! -d "$toolchain_root" ]
+    then
+        mkdir --parents "$toolchain_root"
+
+        if ! tar                        \
+            --extract                   \
+            --file "$toolchain_archive" \
+            --directory "$toolchain_root"
+        then
+            echo "Error: Cannot extract the toolchain archive."
+            exit 1
+        fi
+    fi
+}
+
+function toolchain_constructor
+{
+    toolchain_constructor="$toolchain_root/root/package-constructor"
+
+    if [ ! -d "$toolchain_constructor" ]
+    then
+        cp --recursive "$directory/package-constructor" "$toolchain_constructor"
+    fi
+}
+
+function toolchain_mount
+{
+    toolchain_mount="$toolchain_root/$1"
+
+    if [ ! -d "$toolchain_mount" ]
+    then
+        mkdir --parents "$toolchain_mount"
+    fi
+
+    toolchain_mount_type="$2"
+
+    if ! mount --types          \
+        "$toolchain_mount_type" \
+        "$toolchain_mount_type" \
+        "$toolchain_mount"
+    then
+        echo "Error: Cannot mount the toolchain root."
+        exit 1
+    fi
+}
+
+function toolchain_chroot
+{
+    if ! chroot "$toolchain_root" bash --login
+    then
+        echo "Error: Cannot chroot the toolchain root."
+    fi
+}
+
+function toolchain_umount
+{
+    toolchain_umount="$toolchain_root/$1"
+
+    if ! umount "$toolchain_umount"
+    then
+        echo "Error: Cannot umount the toolchain root."
+    fi
+}
+
+function main
+{
+    if [ "$(id -u)" -ne 0 ]
+    then
+        echo "Error: Script must be called as a superuser."
+    else
+        directory
+
+        toolchain_archive
+        toolchain_root
+        toolchain_constructor
+
+        toolchain_mount "/dev"     "devtmpfs"
+        toolchain_mount "/dev/pts" "devpts"
+        toolchain_mount "/proc"    "proc"
+        toolchain_mount "/run"     "tmpfs"
+        toolchain_mount "/tmp"     "tmpfs"
+
+        toolchain_chroot
+
+        toolchain_umount "/tmp"
+        toolchain_umount "/run"
+        toolchain_umount "/proc"
+        toolchain_umount "/dev/pts"
+        toolchain_umount "/dev"
+    fi
+}
+
+main

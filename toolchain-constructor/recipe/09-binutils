@@ -1,0 +1,43 @@
+#!/bin/bash
+
+package_name="binutils"
+package_version="2.44"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    sed "6031s/\$add_dir//" --in-place "$package_source/ltmain.sh"
+
+    "$package_source/configure"                \
+        --prefix="/usr"                        \
+        --build=`$package_source/config.guess` \
+        --host="$toolchain_target"             \
+        --disable-gprofng                      \
+        --disable-nls                          \
+        --disable-werror                       \
+        --enable-64-bit-bfd                    \
+        --enable-default-hash-style="gnu"      \
+        --enable-new-dtags                     \
+        --enable-shared
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+
+    for filename in    \
+        "libbfd"       \
+        "libctf"       \
+        "libctf-nobfd" \
+        "libopcodes"   \
+        "libsframe"
+    do
+        rm "$toolchain_root/usr/lib/$filename.a" \
+           "$toolchain_root/usr/lib/$filename.la"
+    done
+}

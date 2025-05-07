@@ -1,0 +1,36 @@
+#!/bin/bash
+
+package_name="gcc"
+package_version="14.2.0"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    "$package_source/libstdc++-v3/configure"   \
+        --prefix="/usr"                        \
+        --build=`$package_source/config.guess` \
+        --host="$toolchain_target"             \
+        --disable-libstdcxx-pch                \
+        --disable-multilib                     \
+        --disable-nls                          \
+        --with-gxx-include-dir="/toolchain/$toolchain_target/include/c++/$package_version"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+
+    for filename in       \
+        "libstdc++.la"    \
+        "libstdc++exp.la" \
+        "libstdc++fs.la"  \
+        "libsupc++.la"
+    do
+        rm "$toolchain_root/usr/lib/$filename"
+    done
+}
