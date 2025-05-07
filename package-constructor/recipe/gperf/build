@@ -1,0 +1,23 @@
+#!/bin/bash
+
+package_name="gperf"
+package_version="3.1"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    "$package_source/configure" \
+        --prefix="/usr"         \
+        --docdir="/usr/share/doc/$package_name-$package_version"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

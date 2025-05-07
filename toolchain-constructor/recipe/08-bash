@@ -1,0 +1,26 @@
+#!/bin/bash
+
+package_name="bash"
+package_version="5.2.37"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    "$package_source/configure"                           \
+        --prefix="/usr"                                   \
+        --build=`sh $package_source/support/config.guess` \
+        --host="$toolchain_target"                        \
+        --without-bash-malloc
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+
+    ln --symbolic "bash" "$toolchain_root/bin/sh"
+}

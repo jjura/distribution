@@ -1,0 +1,28 @@
+#!/bin/bash
+
+package_name="mako"
+package_version="1.3.9"
+package_address="https://files.pythonhosted.org/packages/source/M/Mako/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    pip3 wheel "$package_source" \
+        --no-build-isolation     \
+        --no-cache-dir           \
+        --no-deps                \
+        --wheel-dir "$package_build"
+}
+
+function do_build
+{
+    return
+}
+
+function do_install
+{
+    pip3 install "Mako"               \
+        --find-links "$package_build" \
+        --no-index                    \
+        --root="$package_root"
+}

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+package_name="mesa"
+package_version="24.3.4"
+package_address="https://mesa.freedesktop.org/archive/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source"  \
+        --prefix="/usr"            \
+        --libdir="/usr/lib"        \
+        --buildtype="release"      \
+        -D gallium-drivers="virgl" \
+        -D glx="disabled"          \
+        -D libunwind="disabled"    \
+        -D platforms="wayland"     \
+        -D valgrind="disabled"     \
+        -D video-codecs="all"      \
+        -D vulkan-drivers=""
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}

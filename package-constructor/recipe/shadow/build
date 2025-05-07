@@ -1,0 +1,37 @@
+#!/bin/bash
+
+package_name="shadow"
+package_version="4.17.3"
+package_address="https://github.com/shadow-maint/$package_name/releases/download/$package_version/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    sed "s:groups\$(EXEEXT) ::" --in-place "$package_source/Makefile.in"
+
+    sed --expression "s:#ENCRYPT_METHOD DES:ENCRYPT_METHOD YESCRYPT:" \
+        --expression "s:/var/spool/mail:/var/mail:"                   \
+        --expression "/PATH=/{s@/sbin:@@;s@/bin:@@}"                  \
+        --in-place "$package_source/etc/login.defs"
+
+    "$package_source/configure"           \
+        --prefix="/usr"                   \
+        --disable-static                  \
+        --sysconfdir="/etc"               \
+        --with-bcrypt                     \
+        --with-group-name-max-length="32" \
+        --with-yescrypt                   \
+        --without-libbsd
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    touch "$package_root/usr/bin/passwd"
+
+    make DESTDIR="$package_root" install
+}

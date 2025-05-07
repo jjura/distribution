@@ -1,0 +1,30 @@
+#!/bin/bash
+
+package_name="freetype"
+package_version="2.13.3"
+package_address="https://downloads.sourceforge.net/$package_name/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    sed --regexp-extended "s:.*(AUX_MODULES.*valid):\1:" \
+        --in-place "$package_source/modules.cfg"
+
+    sed --regexp-extended "s:.*(#.*SUBPIXEL_RENDERING) .*:\1:" \
+        --in-place "$package_source/include/freetype/config/ftoption.h"
+
+    "$package_source/configure" \
+        --prefix="/usr"         \
+        --disable-static        \
+        --enable-freetype-config
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

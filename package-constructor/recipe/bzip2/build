@@ -1,0 +1,32 @@
+#!/bin/bash
+
+package_name="bzip2"
+package_version="1.0.8"
+package_address="https://sourceware.org/pub/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    sed --expression "s:ln -s -f \$(PREFIX)/bin/:ln -s :"   \
+        --expression "s:(PREFIX)/man:(PREFIX)/share/man:g" \
+        --in-place "$package_source/Makefile"
+}
+
+function do_build
+{
+    make --directory "$package_source" --file "Makefile-libbz2_so"
+    make --directory "$package_source" clean
+    make --directory "$package_source"
+}
+
+function do_install
+{
+    make --directory "$package_source" PREFIX="$package_root/usr" install
+
+    cp --archive "$package_source/libbz2.so."* "$package_root/usr/lib"
+
+    ln --symbolic "$package_root/usr/lib/libbz2.so.$package_version" \
+       --relative "$package_root/usr/lib/libbz2.so"
+
+    rm "$package_root/usr/lib/libbz2.a"
+}

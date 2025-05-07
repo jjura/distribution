@@ -1,0 +1,53 @@
+#!/bin/bash
+
+package_name="gcc"
+package_version="14.2.0"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    cd "$package_source"
+
+    "$package_source/contrib/download_prerequisites"
+
+    cd "$package_build"
+
+    sed --expression "/m64=/s/lib64/lib/" \
+        --in-place "$package_source/gcc/config/i386/t-linux64"
+
+    sed "/thread_header =/s/@.*@/gthr-posix.h/" --in-place \
+        "$package_source/libgcc/Makefile.in"               \
+        "$package_source/libstdc++-v3/include/Makefile.in"
+
+    "$package_source/configure"                \
+        --prefix="/usr"                        \
+        --build=`$package_source/config.guess` \
+        --host="$toolchain_target"             \
+        --target="$toolchain_target"           \
+        --with-build-sysroot="$toolchain_root" \
+        --disable-libatomic                    \
+        --disable-libgomp                      \
+        --disable-libquadmath                  \
+        --disable-libsanitizer                 \
+        --disable-libssp                       \
+        --disable-libvtv                       \
+        --disable-multilib                     \
+        --disable-nls                          \
+        --enable-default-pie                   \
+        --enable-default-ssp                   \
+        --enable-languages="c,c++"             \
+        LDFLAGS_FOR_TARGET=-L"$package_build/$toolchain_target/libgcc"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+
+    ln --symbolic "$toolchain_root/usr/bin/gcc" \
+       --relative "$toolchain_root/usr/bin/cc"
+}

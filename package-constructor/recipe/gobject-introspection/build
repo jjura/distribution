@@ -1,0 +1,24 @@
+#!/bin/bash
+
+package_name="gobject-introspection"
+package_version="1.82.0"
+package_address="https://download.gnome.org/sources/$package_name/1.82/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source" \
+        --prefix="/usr"           \
+        --libdir="/usr/lib"       \
+        --buildtype="release"
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}

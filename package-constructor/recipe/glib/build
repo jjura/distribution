@@ -1,0 +1,71 @@
+#!/bin/bash
+
+package_name="glib"
+package_version="2.82.5"
+package_address="https://download.gnome.org/sources/$package_name/2.82/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+dependency_name="gobject-introspection"
+dependency_version="1.82.0"
+dependency_address="https://download.gnome.org/sources/$dependency_name/1.82/$dependency_name-$dependency_version.tar.xz"
+
+function do_configure
+{
+    if ! wget --no-check-certificate "$dependency_address"
+    then
+        exit 1
+    fi
+
+    meson setup                                     \
+        "$package_source"                           \
+        "$package_build/$package_name"              \
+            --prefix="$package_build/bootstrap"     \
+            --libdir="$package_build/bootstrap/lib" \
+            --buildtype="release"                   \
+                -D introspection="disabled"
+
+    ninja -C "$package_build/$package_name"
+    ninja -C "$package_build/$package_name" install
+
+    if ! tar                                       \
+        --extract                                  \
+        --file "$(basename "$dependency_address")" \
+        --directory "$package_source"
+    then
+        exit 1
+    fi
+
+    meson setup                                                        \
+        "$package_source/$dependency_name-$dependency_version"         \
+        "$package_build/$dependency_name"                              \
+            --pkg-config-path="$package_build/bootstrap/lib/pkgconfig" \
+            --prefix="$package_build/bootstrap"                        \
+            --libdir="$package_build/bootstrap/lib"                    \
+            --buildtype="release"                                      \
+                -D build_introspection_data="false"
+
+    ninja -C "$package_build/$dependency_name"
+    ninja -C "$package_build/$dependency_name" install
+
+    PATH="$package_build/bootstrap/bin:$PATH" LD_LIBRARY_PATH="$package_build/bootstrap/lib" \
+        meson setup                                                                          \
+            "$package_source"                                                                \
+            "$package_build/$package_name"                                                   \
+                --reconfigure                                                                \
+                --pkg-config-path="$package_build/bootstrap/lib/pkgconfig"                   \
+                --prefix="/usr"                                                              \
+                --libdir="/usr/lib"                                                          \
+                --buildtype="release"                                                        \
+                    -D introspection="enabled"
+}
+
+function do_build
+{
+    PATH="$package_build/bootstrap/bin:$PATH" LD_LIBRARY_PATH="$package_build/bootstrap/lib" \
+        ninja -C "$package_build/$package_name"
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja -C "$package_build/$package_name" install
+}

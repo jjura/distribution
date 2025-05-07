@@ -1,0 +1,28 @@
+#!/bin/bash
+
+package_name="libinput"
+package_version="1.27.1"
+package_address="https://gitlab.freedesktop.org/libinput/$package_name/-/archive/$package_version/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source" \
+        --prefix="/usr"           \
+        --libdir="/usr/lib"       \
+        --buildtype="release"     \
+        -D debug-gui="false"      \
+        -D libwacom="false"       \
+        -D tests="false"          \
+        -D udev-dir="/usr/lib/udev"
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}

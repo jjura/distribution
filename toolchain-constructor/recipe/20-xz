@@ -1,0 +1,27 @@
+#!/bin/bash
+
+package_name="xz"
+package_version="5.6.4"
+package_address="https://github.com/tukaani-project/xz/releases/download/v$package_version/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    "$package_source/configure"                          \
+        --prefix="/usr"                                  \
+        --build=`$package_source/build-aux/config.guess` \
+        --host="$toolchain_target"                       \
+        --disable-static                                 \
+        --docdir="/usr/share/doc/$package_name-$package_version"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+
+    rm "$toolchain_root/usr/lib/liblzma.la"
+}

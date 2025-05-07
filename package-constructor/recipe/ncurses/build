@@ -1,0 +1,41 @@
+#!/bin/bash
+
+package_name="ncurses"
+package_version="6.5"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    "$package_source/configure"                       \
+        --prefix="/usr"                               \
+        --mandir="/usr/share/man"                     \
+        --enable-pc-files                             \
+        --with-cxx-shared                             \
+        --with-pkg-config-libdir="/usr/lib/pkgconfig" \
+        --with-shared                                 \
+        --without-debug                               \
+        --without-normal
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+
+    for filename in "ncurses" "form" "panel" "menu"
+    do
+        ln --symbolic "$package_root/usr/lib/lib${filename}w.so" \
+           --relative "$package_root/usr/lib/lib${filename}.so"
+
+        ln --symbolic "$package_root/usr/lib/pkgconfig/${filename}w.pc" \
+           --relative "$package_root/usr/lib/pkgconfig/${filename}.pc"
+    done
+
+    ln --symbolic "$package_root/usr/lib/libncursesw.so" \
+       --relative "$package_root/usr/lib/libcurses.so"
+}

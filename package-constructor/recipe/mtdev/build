@@ -1,0 +1,23 @@
+#!/bin/bash
+
+package_name="mtdev"
+package_version="1.1.7"
+package_address="http://bitmath.org/code/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    "$package_source/configure" \
+        --prefix="/usr"         \
+        --disable-static
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

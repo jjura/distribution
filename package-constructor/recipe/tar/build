@@ -1,0 +1,26 @@
+#!/bin/bash
+
+package_name="tar"
+package_version="1.35"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+package_dependencies=""
+
+function do_configure
+{
+    export FORCE_UNSAFE_CONFIGURE="1"
+
+    "$package_source/configure" \
+        --prefix="/usr"
+
+    unset FORCE_UNSAFE_CONFIGURE
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$package_root" install
+}

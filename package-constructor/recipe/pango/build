@@ -1,0 +1,26 @@
+#!/bin/bash
+
+package_name="pango"
+package_version="1.56.1"
+package_address="https://download.gnome.org/sources/$package_name/1.56/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source" \
+        --prefix="/usr"           \
+        --libdir="/usr/lib"       \
+        --buildtype="release"     \
+        --wrap-mode="nofallback"  \
+        -D introspection="enabled"
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}

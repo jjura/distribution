@@ -1,0 +1,26 @@
+#!/bin/bash
+
+package_name="openssl"
+package_version="3.4.1"
+package_address="https://github.com/openssl/$package_name/releases/download/$package_name-$package_version/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    "$package_source/config"                        \
+        --prefix="/usr"                             \
+        --cross-compile-prefix="$toolchain_target-" \
+        --libdir="lib"                              \
+        --openssldir="/etc/ssl"                     \
+        shared                                      \
+        zlib-dynamic
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+}

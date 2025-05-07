@@ -1,0 +1,25 @@
+#!/bin/bash
+
+package_name="gawk"
+package_version="5.3.1"
+package_address="https://ftp.gnu.org/gnu/$package_name/$package_name-$package_version.tar.gz"
+
+function do_configure
+{
+    sed "s/extras//" --in-place "$package_source/Makefile.in"
+
+    "$package_source/configure"                          \
+        --prefix="/usr"                                  \
+        --build=`$package_source/build-aux/config.guess` \
+        --host="$toolchain_target"
+}
+
+function do_build
+{
+    make
+}
+
+function do_install
+{
+    make DESTDIR="$toolchain_root" install
+}

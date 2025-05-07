@@ -1,0 +1,24 @@
+#!/bin/bash
+
+package_name="gdk-pixbuf"
+package_version="2.42.12"
+package_address="https://download.gnome.org/sources/$package_name/2.42/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source" \
+        --prefix="/usr"           \
+        --libdir="/usr/lib"       \
+        --buildtype="release"
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}

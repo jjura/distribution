@@ -1,0 +1,24 @@
+#!/bin/bash
+
+package_name="fribidi"
+package_version="1.0.16"
+package_address="https://github.com/fribidi/$package_name/releases/download/v$package_version/$package_name-$package_version.tar.xz"
+package_dependencies=""
+
+function do_configure
+{
+    meson setup "$package_source" \
+        --prefix="/usr"           \
+        --libdir="/usr/lib"       \
+        --buildtype="release"
+}
+
+function do_build
+{
+    ninja
+}
+
+function do_install
+{
+    DESTDIR="$package_root" ninja install
+}
